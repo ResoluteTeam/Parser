@@ -6,33 +6,40 @@
  * Time: 15:13
  */
 
-function getPage( $url )
-{
-    $init = curl_init();
-    curl_setopt($init, CURLOPT_URL, $url);
-    curl_setopt($init, CURLOPT_USERAGENT, "Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.6) Gecko/20070725 Firefox/2.0.0.6");
-    curl_setopt($init, CURLOPT_TIMEOUT, 15);
-    curl_setopt($init, CURLOPT_FOLLOWLOCATION, 0);
-    curl_setopt($init, CURLOPT_RETURNTRANSFER, 1);
-
-    $result = curl_exec($init);
-    curl_close($init);
-    return $result;
-
-}
+include "getPage.php";
 
 $url = 'http://bookbattery.com.ua';
 $result = getPage($url);
 
+
+//<a href="/sony.html" title="Батарея для ноутбуков Sony">Sony</a>
+//[5-tyuning.html'>тюнинг]
+// $nameCat = preg_replace("/^(.*?)'>/is", "", $tmp);
+// $urlCat = preg_replace("/'>(.*?)$/is", "", $tmp );
+// preg_replace('/\..+$/','',$str);
+// substr('qwauireaau!hhed!sdvg',0,strrpos('qwauireaau!hhed!sdvg', '!'))
 if (! preg_match_all("/<a href=(.*?)<\/a>/", $result, $url_list)){
     $resultTXT = "Category find error";
 } else {
     $link = array();
     foreach ($url_list[1] as $key => $value) {
         $tmp = trim($value);
-        $nameCategory = preg_replace("/^(.*?)'>/is", "", $tmp);
-        $urlCategory = preg_replace("/'>(.*?)$/is", "", $tmp );
+//        $tmp = iconv('windows-1251','utf-8', $tmp);
+        $nameCategory = preg_replace("/^(.*?)\">/is", "", $tmp );
+        $urlCategory = preg_replace("/<a href=\"\/(.*?)$/is", "", $tmp);
+        $urlCategory = substr($urlCategory, 0, strrpos($urlCategory, '" title='));
+        $urlCategory = substr($urlCategory, 1);
         $urlCategory = $url.$urlCategory;
-        echo 'Ссылка - '.$urlCategory.' ------- название: <b>'. $nameCategory.'</b>';
+        if ($urlCategory != $url) {
+
+            $file = 'test.csv';
+            $tofile = "'$urlCategory';'$nameCategory';\n";
+            $bom = "\xEF\xBB\xBF";
+            @file_put_contents($file, $bom . $tofile . file_get_contents($file));
+            echo '<br> Link - ' . $urlCategory . ' ------- name: <b>' . $nameCategory . '</b> </br>';
+        } else {
+
+        }
+
     }
 }
